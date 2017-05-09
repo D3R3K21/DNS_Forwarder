@@ -11,9 +11,9 @@ namespace DNS_Forwarder
     class Program
     {
         public static Dictionary<string, ConsulProperties> ConsulServices;
-        static void RefreshServices()
+
+        static void RefreshServices(string endpoint)
         {
-            var endpoint = $"http://{Settings.Default.Node}.dev.corpdomain.local:8500/v1/catalog/node/{Settings.Default.Node}";
             var client = new HttpClient(endpoint);
             var s = client.Get<ConsulServicesResponseModel>();
             ConsulServices = new Dictionary<string, ConsulProperties>();
@@ -23,11 +23,13 @@ namespace DNS_Forwarder
                 if (!ConsulServices.ContainsKey(key))
                     ConsulServices.Add(key, g.Value);
             }
+            Console.Out.WriteLine($"{ConsulServices.Count} Services Loaded From : {endpoint}");
         }
 
         static void Main(string[] args)
         {
-            RefreshServices();
+            var endpoint = $"http://{Settings.Default.Node}.dev.corpdomain.local:8500/v1/catalog/node/{Settings.Default.Node}";
+            RefreshServices(endpoint);
             var ip = IPAddress.Parse("127.0.0.2");
             using (DnsServer server = new DnsServer(ip, 10, 10))
             {
@@ -35,8 +37,45 @@ namespace DNS_Forwarder
 
                 server.Start();
 
-                Console.WriteLine("Press any key to stop server");
-                Console.ReadLine();
+                Console.WriteLine("Press q to stop server, or enter new node name for consul");
+                var control = true;
+                while (control)
+                {
+                    var key = Console.ReadLine()?.ToLower() ?? string.Empty;
+                    switch (key)
+                    {
+                        case "":
+                            {
+                                RefreshServices(endpoint);
+                                break;
+                            }
+                        case "q":
+                            {
+                                control = false;
+                                break;
+                            }
+                        case "quit":
+                            {
+                                control = false;
+                                break;
+                            }
+                        default:
+                            {
+                                endpoint = $"http://{key}.dev.corpdomain.local:8500/v1/catalog/node/{key}";
+                                try
+                                {
+                                    RefreshServices(endpoint);
+                                }
+                                catch (Exception e)
+                                {
+                                    endpoint = $"http://{Settings.Default.Node}.dev.corpdomain.local:8500/v1/catalog/node/{Settings.Default.Node}";
+                                    RefreshServices(endpoint);
+                                }
+                                break;
+                            }
+                    }
+                }
+
             }
         }
         static async Task OnQueryReceived(object sender, QueryReceivedEventArgs e)
