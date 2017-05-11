@@ -1,5 +1,8 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.Linq;
+using System.Management;
 using System.Net;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net;
@@ -26,10 +29,16 @@ namespace DNS_Forwarder
             Console.Out.WriteLine($"{ConsulServices.Count} Services Loaded From : {endpoint}");
         }
 
+        private static string Node { get; set; }
+
+        private static string Endpoint {
+            get { return $"http://{Node}.dev.corpdomain.local:8500/v1/catalog/node/{Node}"; }
+        }
         static void Main(string[] args)
         {
-            var endpoint = $"http://{Settings.Default.Node}.dev.corpdomain.local:8500/v1/catalog/node/{Settings.Default.Node}";
-            RefreshServices(endpoint);
+            Node = Settings.Default.Node;
+            //var endpoint = $"http://{Settings.Default.Node}.dev.corpdomain.local:8500/v1/catalog/node/{Settings.Default.Node}";
+            RefreshServices(Endpoint);
             var ip = IPAddress.Parse("127.0.0.2");
             using (DnsServer server = new DnsServer(ip, 10, 10))
             {
@@ -46,7 +55,7 @@ namespace DNS_Forwarder
                     {
                         case "":
                             {
-                                RefreshServices(endpoint);
+                                RefreshServices(Endpoint);
                                 break;
                             }
                         case "q":
@@ -61,15 +70,15 @@ namespace DNS_Forwarder
                             }
                         default:
                             {
-                                endpoint = $"http://{key}.dev.corpdomain.local:8500/v1/catalog/node/{key}";
+                                Node = key;
                                 try
                                 {
-                                    RefreshServices(endpoint);
+                                    RefreshServices(Endpoint);
                                 }
                                 catch (Exception e)
                                 {
-                                    endpoint = $"http://{Settings.Default.Node}.dev.corpdomain.local:8500/v1/catalog/node/{Settings.Default.Node}";
-                                    RefreshServices(endpoint);
+                                    Node = Settings.Default.Node;
+                                    RefreshServices(Endpoint);
                                 }
                                 break;
                             }
@@ -92,7 +101,7 @@ namespace DNS_Forwarder
 
                 if (ConsulServices.TryGetValue(serviceName, out consuleService))
                 {
-                    var test = DomainName.Parse($"{Settings.Default.Node}.dev.corpdomain.local");
+                    var test = DomainName.Parse($"{Node}.dev.corpdomain.local");
 
                     var record = new SrvRecord(DomainName.Parse(consuleService.Service), 10000, 1, 1,
                         (ushort)consuleService.Port, test);
