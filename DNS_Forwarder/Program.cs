@@ -37,7 +37,6 @@ namespace DNS_Forwarder
         static void Main(string[] args)
         {
             Node = Settings.Default.Node;
-            //var endpoint = $"http://{Settings.Default.Node}.dev.corpdomain.local:8500/v1/catalog/node/{Settings.Default.Node}";
             RefreshServices(Endpoint);
             var ip = IPAddress.Parse("127.0.0.2");
             using (DnsServer server = new DnsServer(ip, 10, 10))
