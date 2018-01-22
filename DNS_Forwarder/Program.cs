@@ -1,8 +1,5 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
-using System.Linq;
-using System.Management;
 using System.Net;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net;
@@ -30,60 +27,78 @@ namespace DNS_Forwarder
         }
 
         private static string Node { get; set; }
+        private static string _ep;
+        private static string Endpoint => $"http://{_ep}:8500/v1/catalog/node/{Node}";
 
-        private static string Endpoint {
-            get { return $"http://{Node}.dev.corpdomain.local:8500/v1/catalog/node/{Node}"; }
-        }
         static void Main(string[] args)
         {
+            _ep = Settings.Default.Node + ".dev.corpdomain.local";
             Node = Settings.Default.Node;
             RefreshServices(Endpoint);
             var ip = IPAddress.Parse("127.0.0.2");
             using (DnsServer server = new DnsServer(ip, 10, 10))
             {
+
                 server.QueryReceived += OnQueryReceived;
-
                 server.Start();
-
                 Console.WriteLine("Press q to stop server, or enter new node name for consul");
                 var control = true;
+
                 while (control)
                 {
-                    var key = Console.ReadLine()?.ToLower() ?? string.Empty;
-                    switch (key)
+                    try
                     {
-                        case "":
-                            {
-                                RefreshServices(Endpoint);
-                                break;
-                            }
-                        case "q":
-                            {
-                                control = false;
-                                break;
-                            }
-                        case "quit":
-                            {
-                                control = false;
-                                break;
-                            }
-                        default:
-                            {
-                                Node = key;
-                                try
+                        var key = Console.ReadLine()?.ToLower() ?? string.Empty;
+                        switch (key)
+                        {
+                            case "":
                                 {
                                     RefreshServices(Endpoint);
+                                    break;
                                 }
-                                catch (Exception e)
+                            case "r":
                                 {
-                                    Node = Settings.Default.Node;
+                                    Console.Out.WriteLine("Please enter relase environment url");
+                                    _ep = Console.ReadLine()?.ToLower() ?? string.Empty;
+                                    Console.Out.WriteLine("Please enter consul node");
+                                    Node = Console.ReadLine()?.ToLower() ?? string.Empty;
                                     RefreshServices(Endpoint);
+                                    break;
                                 }
-                                break;
-                            }
+                            case "q":
+                                {
+                                    control = false;
+                                    break;
+                                }
+                            case "quit":
+                                {
+                                    control = false;
+                                    break;
+                                }
+                            default:
+                                {
+                                    _ep = key + ".dev.corpdomain.local";
+                                    Node = key;
+                                    try
+                                    {
+                                        RefreshServices(Endpoint);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Node = Settings.Default.Node;
+                                        RefreshServices(Endpoint);
+                                    }
+                                    break;
+                                }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("ERROR: " + e);
+                        Console.ForegroundColor = ConsoleColor.White;
                     }
                 }
-
             }
         }
         static async Task OnQueryReceived(object sender, QueryReceivedEventArgs e)
@@ -100,7 +115,7 @@ namespace DNS_Forwarder
 
                 if (ConsulServices.TryGetValue(serviceName, out consuleService))
                 {
-                    var test = DomainName.Parse($"{Node}.dev.corpdomain.local");
+                    var test = DomainName.Parse(_ep);
 
                     var record = new SrvRecord(DomainName.Parse(consuleService.Service), 10000, 1, 1,
                         (ushort)consuleService.Port, test);

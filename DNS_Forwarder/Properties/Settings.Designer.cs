@@ -25,7 +25,7 @@ namespace DNS_Forwarder.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("devtest1")]
+        [global::System.Configuration.DefaultSettingValueAttribute("integrateadmin")]
         public string Node {
             get {
                 return ((string)(this["Node"]));

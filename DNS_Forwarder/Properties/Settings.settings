@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="Node" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">devtest1</Value>
+      <Value Profile="(Default)">integrateadmin</Value>
     </Setting>
   </Settings>
 </SettingsFile>
