@@ -65,6 +65,15 @@ namespace DNS_Forwarder
                                     RefreshServices(Endpoint);
                                     break;
                                 }
+                            case "release":
+                                {
+                                    Console.Out.WriteLine("Please enter relase environment url");
+                                    _ep = Console.ReadLine()?.ToLower() ?? string.Empty;
+                                    Console.Out.WriteLine("Please enter consul node");
+                                    Node = Console.ReadLine()?.ToLower() ?? string.Empty;
+                                    RefreshServices(Endpoint);
+                                    break;
+                                }
                             case "q":
                                 {
                                     control = false;
@@ -73,6 +82,19 @@ namespace DNS_Forwarder
                             case "quit":
                                 {
                                     control = false;
+                                    break;
+                                }
+                            case "h":
+                                {
+                                    Console.Out.WriteLine("Enter to refresh currently selected environment");
+                                    Console.Out.WriteLine("r/release to use release environment");
+                                    Console.Out.WriteLine("q/quit to exit");
+                                    Console.Out.WriteLine("h/help to display usage");
+                                    break;
+                                }
+                            case "help":
+                                {
+
                                     break;
                                 }
                             default:
