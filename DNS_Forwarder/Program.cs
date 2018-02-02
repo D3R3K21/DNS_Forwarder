@@ -17,6 +17,11 @@ namespace DNS_Forwarder
             var client = new HttpClient(endpoint);
             var s = client.Get<ConsulServicesResponseModel>();
             ConsulServices = new Dictionary<string, ConsulProperties>();
+            if (s?.Services == null)
+            {
+                Console.Out.WriteLine($"Endpoint not found : {endpoint}");
+                return;
+            }
             foreach (var g in s.Services)
             {
                 var key = g.Value.Service;
