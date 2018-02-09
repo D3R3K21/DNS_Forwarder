@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using ARSoft.Tools.Net;
@@ -65,8 +66,17 @@ namespace DNS_Forwarder
                                 {
                                     Console.Out.WriteLine("Please enter relase environment url");
                                     _ep = Console.ReadLine()?.ToLower() ?? string.Empty;
-                                    Console.Out.WriteLine("Please enter consul node");
-                                    Node = Console.ReadLine()?.ToLower() ?? string.Empty;
+
+                                    var client = new HttpClient($"http://{_ep}:8500/v1/catalog/nodes");
+                                    var s = client.Get<List<ConsulNode>>();
+                                    Node = s.SingleOrDefault()?.Node;
+                                    if (Node == null)
+                                    {
+                                        Console.Out.WriteLine($"No consul nodes found for endpoint : {_ep}");
+                                        break;
+                                    }
+                                    //Console.Out.WriteLine("Please enter consul node");
+                                    //Node = Console.ReadLine()?.ToLower() ?? string.Empty;
                                     RefreshServices(Endpoint);
                                     break;
                                 }
