@@ -38,16 +38,13 @@ namespace DNS_Forwarder
 
         static void Main(string[] args)
         {
-            _ep = Settings.Default.Node + ".dev.corpdomain.local";
-            Node = Settings.Default.Node;
-            RefreshServices(Endpoint);
             var ip = IPAddress.Parse("127.0.0.2");
             using (DnsServer server = new DnsServer(ip, 10, 10))
             {
 
                 server.QueryReceived += OnQueryReceived;
                 server.Start();
-                Console.WriteLine("Press q to stop server, or enter new node name for consul");
+                Console.WriteLine("Press q to stop server, or enter environment name for consul server");
                 var control = true;
 
                 while (control)
@@ -75,8 +72,6 @@ namespace DNS_Forwarder
                                         Console.Out.WriteLine($"No consul nodes found for endpoint : {_ep}");
                                         break;
                                     }
-                                    //Console.Out.WriteLine("Please enter consul node");
-                                    //Node = Console.ReadLine()?.ToLower() ?? string.Empty;
                                     RefreshServices(Endpoint);
                                     break;
                                 }
@@ -109,24 +104,32 @@ namespace DNS_Forwarder
                                 }
                             case "help":
                                 {
-
+                                    Console.Out.WriteLine("Enter to refresh currently selected environment");
+                                    Console.Out.WriteLine("r/release to use release environment");
+                                    Console.Out.WriteLine("q/quit to exit");
+                                    Console.Out.WriteLine("h/help to display usage");
                                     break;
                                 }
                             default:
                                 {
-                                    _ep = key + ".dev.corpdomain.local";
-                                    Node = key;
-                                    try
-                                    {
-                                        RefreshServices(Endpoint);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Node = Settings.Default.Node;
-                                        RefreshServices(Endpoint);
-                                    }
+                                    Console.Out.WriteLine("Enter to refresh currently selected environment");
+                                    Console.Out.WriteLine("r/release to use release environment");
+                                    Console.Out.WriteLine("q/quit to exit");
+                                    Console.Out.WriteLine("h/help to display usage");
                                     break;
-                                }
+                                }        
+                        }
+                        string setting = null;
+                        try
+                        {
+                            setting = $"http://{new Uri(Endpoint).DnsSafeHost}:8500/v1/kv/win";
+                            Environment.SetEnvironmentVariable("CONSUL_SERVER", setting, EnvironmentVariableTarget.Machine);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"Failed to set 'CONSUL_SERVER' environment variable to '{setting}'");
+                            Console.ForegroundColor = ConsoleColor.White;
                         }
                     }
                     catch (Exception e)
