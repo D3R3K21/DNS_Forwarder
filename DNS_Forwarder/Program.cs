@@ -122,7 +122,7 @@ namespace DNS_Forwarder
                         string setting = null;
                         try
                         {
-                            setting = $"http://{new Uri(Endpoint).DnsSafeHost}:8500/v1/kv/win";
+                            setting = $"{new Uri(Endpoint).DnsSafeHost}:8500/v1/kv/win";
                             Environment.SetEnvironmentVariable("CONSUL_SERVER", setting, EnvironmentVariableTarget.Machine);
                         }
                         catch (Exception e)
