@@ -51,7 +51,9 @@ namespace DNS_Forwarder
                 {
                     try
                     {
-                        var key = Console.ReadLine()?.ToLower() ?? string.Empty;
+                        var lines = (Console.ReadLine()?.ToLower() ?? string.Empty).Trim().Split(' ');
+                        var key = lines.FirstOrDefault();
+
                         switch (key)
                         {
                             case "":
@@ -61,8 +63,17 @@ namespace DNS_Forwarder
                                 }
                             case "r":
                                 {
-                                    Console.Out.WriteLine("Please enter relase environment url");
-                                    _ep = Console.ReadLine()?.ToLower() ?? string.Empty;
+                                    var release = lines.LastOrDefault();
+                                    if (release != key)
+                                    {
+                                        _ep = $"release-{release}.integrate.team";
+                                    }
+                                    else
+                                    {
+                                        Console.Out.WriteLine("Please enter relase environment url");
+                                        _ep = Console.ReadLine()?.ToLower() ?? string.Empty;
+                                    }
+
 
                                     var client = new HttpClient($"http://{_ep}:8500/v1/catalog/nodes");
                                     var s = client.Get<List<ConsulNode>>();
@@ -117,7 +128,7 @@ namespace DNS_Forwarder
                                     Console.Out.WriteLine("q/quit to exit");
                                     Console.Out.WriteLine("h/help to display usage");
                                     break;
-                                }        
+                                }
                         }
                         string setting = null;
                         try
